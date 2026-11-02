@@ -1,0 +1,28 @@
+PROJECT TITLE
+Mars Safe Path: An Interactive Jezero Traverse Planner
+
+SHORT DESCRIPTION
+Mars Safe Path is an educational web prototype for the “Interplanetary Survival Guide: Martian Map” challenge. It focuses on the Jezero Crater region and lets users explore three independent NASA Mars Trek map layers: Viking visible imagery, MGS MOLA colour hillshade and Mars Odyssey THEMIS daytime infrared imagery. Users can choose example endpoints, compare a direct line with an A* route, and inspect approximate distance and synthetic traversal-cost metrics.
+
+THE PROBLEM
+Planning a planetary surface traverse requires interpreting different kinds of terrain information and comparing possible paths. A single image may not communicate all relevant surface context. An accessible map interface can help users explore complementary remote-sensing products and understand route-search concepts.
+
+OUR APPROACH
+The application combines an interactive Leaflet map with three NASA Mars Trek WMTS layers. A* pathfinding is demonstrated on a 16 × 16 synthetic traversal-cost grid. A direct route is shown as a baseline, allowing users to see how a cost-aware search can choose a different path.
+
+NASA DATA USED
+- Viking visible global mosaic: optical context.
+- MGS MOLA global colour hillshade: broad topographic context.
+- THEMIS daytime infrared global mosaic: thermal infrared context.
+
+SCIENTIFIC TRANSPARENCY
+The three NASA layers are visual context only. The A* grid, waypoint labels and high-cost zones are synthetic examples and are not derived from NASA terrain measurements. This version does not perform automated hazard detection or calculate a scientifically validated safe route. The result is an educational demonstration, not a real mission navigation tool.
+
+TECHNOLOGY
+HTML, CSS, JavaScript, Leaflet.js, NASA Mars Trek WMTS, A* pathfinding.
+
+INDIVIDUAL CONTRIBUTION
+[Write accurately what you personally designed, coded, researched, tested and presented. Do not claim work you did not do.]
+
+FUTURE SCOPE
+Integrate a documented Jezero DEM, derive slope and roughness rasters, define and validate terrain-cost functions, quantify uncertainty, and compare route predictions with independent mission data.

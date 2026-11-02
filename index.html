@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Mars Safe Path: an educational Mars traverse-planning prototype using NASA Mars Trek map layers and A* pathfinding.">
+  <title>Mars Safe Path | Jezero Traverse Planner</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://trek.nasa.gov">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#" aria-label="Mars Safe Path home">
+    <span class="brand-mark">M</span><span><strong>MARS SAFE PATH</strong><small>JEZERO TRAVERSE PLANNER</small></span>
+  </a>
+  <nav><a href="#planner">Planner</a><a href="#method">Method</a><a href="#data">NASA data</a><a href="#limits">Limitations</a></nav>
+  <span class="status"><i></i> EDUCATIONAL PROTOTYPE</span>
+</header>
+<main>
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">NASA SPACE APPS CHALLENGE · INTERPLANETARY SURVIVAL GUIDE</p>
+      <h1>Plan a traverse.<br><em>Read the Martian terrain.</em></h1>
+      <p class="hero-text">An interactive educational concept for exploring the Jezero Crater region. Compare a direct line with an A* route through a clearly labelled demonstration cost grid, while viewing independent NASA optical, topographic and thermal map layers.</p>
+      <a class="primary-link" href="#planner">Launch mission planner <span>↘</span></a>
+    </div>
+    <div class="hero-stat">
+      <span class="stat-label">AREA OF INTEREST</span><strong>JEZERO<br>CRATER</strong>
+      <span class="stat-coord">Approx. 18.4° N · 77.5° E</span>
+      <span class="stat-note">Mars 2020 / Perseverance exploration region</span>
+    </div>
+  </section>
+
+  <section class="notice" role="note">
+    <strong>Scientific integrity note:</strong> The three NASA map layers are for visual context only. The route-search grid and marked demonstration zones are synthetic teaching data, not hazards measured from those layers. The route output is not a real mission safety recommendation.
+  </section>
+
+  <section id="planner" class="planner-section">
+    <div class="section-heading">
+      <div><p class="eyebrow">01 / INTERACTIVE TOOL</p><h2>Martian surface planner</h2></div>
+      <div class="map-badge"><span></span> NASA MARS TREK WMTS</div>
+    </div>
+    <div class="workspace">
+      <aside class="control-panel">
+        <div class="panel-title"><span class="number">A</span><div><h3>Plan a traverse</h3><p>Select two demonstration waypoints.</p></div></div>
+        <label for="start">Starting point</label>
+        <select id="start">
+          <option value="west">West Ridge Station</option>
+          <option value="delta">Delta Science Site</option>
+          <option value="basin">Crater Basin Edge</option>
+        </select>
+        <label for="destination">Destination</label>
+        <select id="destination">
+          <option value="delta">Delta Science Site</option>
+          <option value="basin">Crater Basin Edge</option>
+          <option value="west">West Ridge Station</option>
+        </select>
+        <button id="planBtn" class="plan-button">Calculate demonstration route <span>→</span></button>
+        <div class="divider"></div>
+        <h4>NASA MAP LAYERS</h4>
+        <label class="layer-option"><input type="checkbox" id="molaToggle" checked><span class="swatch relief"></span>MOLA elevation hillshade</label>
+        <label class="layer-option"><input type="checkbox" id="themisToggle"><span class="swatch thermal"></span>THEMIS daytime infrared</label>
+        <label class="layer-option"><input type="checkbox" id="vikingToggle" checked><span class="swatch optical"></span>Viking visible imagery</label>
+        <div class="divider"></div>
+        <h4>DEMONSTRATION OVERLAYS</h4>
+        <label class="layer-option"><input type="checkbox" id="hazardToggle" checked><span class="swatch hazard"></span>Synthetic high-cost zones</label>
+        <label class="layer-option"><input type="checkbox" id="waypointToggle" checked><span class="swatch point"></span>Example waypoints</label>
+        <div class="divider"></div>
+        <div class="legend">
+          <h4>ROUTE LEGEND</h4>
+          <p><i class="legend-line recommended"></i>A* lower-cost sample route</p>
+          <p><i class="legend-line direct"></i>Direct comparison line</p>
+          <p><i class="legend-dot"></i>Synthetic high-cost zone</p>
+        </div>
+        <p class="small-help">Change either endpoint to recalculate. Toggle map layers independently. An internet connection is required to load NASA tiles.</p>
+      </aside>
+      <div class="map-wrap">
+        <div id="map" role="application" aria-label="Interactive Mars map focused on Jezero Crater"></div>
+        <div class="map-overlay top-left"><span class="live-dot"></span> JEZERO CRATER · MARS</div>
+        <div class="map-overlay bottom-right">Map tiles: NASA / JPL / USGS · Mars Trek</div>
+      </div>
+    </div>
+    <div class="results-grid" aria-live="polite">
+      <article class="result-card highlighted"><div class="result-top"><span>A* SAMPLE ROUTE</span><span class="tag">MODEL OUTPUT</span></div><strong id="routeDistance">—</strong><small>Approximate map distance</small><div class="result-foot"><span>Accumulated grid cost</span><b id="routeCost">—</b></div></article>
+      <article class="result-card"><div class="result-top"><span>DIRECT LINE</span><span class="tag muted">BASELINE</span></div><strong id="directDistance">—</strong><small>Great-circle distance estimate</small><div class="result-foot"><span>Direct-line sample cost</span><b id="directCost">—</b></div></article>
+      <article class="result-card"><div class="result-top"><span>PATH COMPARISON</span><span class="tag muted">SYNTHETIC GRID</span></div><strong id="extraDistance">—</strong><small>Extra distance vs direct line</small><div class="result-foot"><span>Search method</span><b>A* (8 directions)</b></div></article>
+    </div>
+    <p id="routeMessage" class="route-message">Select two different endpoints and calculate a demonstration route.</p>
+  </section>
+
+  <section id="method" class="explain-section">
+    <div class="section-heading"><div><p class="eyebrow">02 / TECHNICAL APPROACH</p><h2>How the prototype works</h2></div></div>
+    <div class="method-grid">
+      <article><span>01</span><h3>Visualise the region</h3><p>Leaflet displays NASA Mars Trek map tiles. Users can compare visible imagery, global elevation shading and daytime infrared imagery.</p></article>
+      <article><span>02</span><h3>Model traversal cost</h3><p>A small 16 × 16 synthetic grid assigns different movement costs to cells. Higher values represent hypothetical difficult terrain in this demonstration only.</p></article>
+      <article><span>03</span><h3>Search with A*</h3><p>A* uses accumulated movement cost plus a distance heuristic to find a lower-cost path through the synthetic grid. A direct line is shown as a baseline.</p></article>
+    </div>
+  </section>
+
+  <section class="data-section" id="data">
+    <p class="eyebrow">03 / DATA PROVENANCE</p><h2>Three independent NASA map products</h2>
+    <div class="data-grid">
+      <article><span class="data-chip optical">OPTICAL</span><h3>Viking visible mosaic</h3><p>Global visible-light context mosaic. Used as the base map for geographic orientation.</p><a href="https://trek.nasa.gov/tiles/apidoc/trekAPI.html?body=mars" target="_blank" rel="noopener">NASA Mars Trek layer catalogue ↗</a></article>
+      <article><span class="data-chip topo">TOPOGRAPHIC</span><h3>MOLA colour hillshade</h3><p>Global elevation-derived shaded relief. Useful for broad landform context, not local obstacle detection.</p><a href="https://trek.nasa.gov/tiles/apidoc/trekAPI.html?body=mars" target="_blank" rel="noopener">NASA Mars Trek layer catalogue ↗</a></article>
+      <article><span class="data-chip thermal">THERMAL</span><h3>THEMIS daytime infrared</h3><p>Thermal infrared mosaic from Mars Odyssey THEMIS. Shown as a separate visual layer; not converted into route costs.</p><a href="https://trek.nasa.gov/tiles/apidoc/trekAPI.html?body=mars" target="_blank" rel="noopener">NASA Mars Trek layer catalogue ↗</a></article>
+    </div>
+  </section>
+
+  <section id="limits" class="limitations">
+    <div><p class="eyebrow">04 / LIMITATIONS & NEXT SCIENTIFIC STEP</p><h2>A transparent research prototype.</h2></div>
+    <ul>
+      <li>The A* cost grid and circular zones are invented demonstration values; they are not extracted from NASA images or terrain rasters.</li>
+      <li>The NASA layers are visual context only. This version does not perform pixel classification, DEM slope calculation, thermal analysis or automated hazard detection.</li>
+      <li>Global MOLA and THEMIS products have resolutions and measurement properties that are not suitable for detecting every astronaut-scale obstacle.</li>
+      <li>Distances are approximate map estimates. The model does not include rover/astronaut mobility, power, communications, radiation forecasts, weather or operational constraints.</li>
+      <li>This student prototype is for education and demonstration only. It must not be used for real mission operations or safety decisions.</li>
+    </ul>
+  </section>
+
+  <section class="sources-section">
+    <p class="eyebrow">05 / REFERENCES</p><h2>NASA mission and mapping resources</h2>
+    <div class="source-links">
+      <a href="https://trek.nasa.gov/mars/" target="_blank" rel="noopener"><strong>NASA Mars Trek</strong><span>Interactive Mars mapping portal ↗</span></a>
+      <a href="https://trek.nasa.gov/tiles/apidoc/trekAPI.html?body=mars" target="_blank" rel="noopener"><strong>Mars Trek WMTS documentation</strong><span>Map services and layer catalogue ↗</span></a>
+      <a href="https://pds.nasa.gov/" target="_blank" rel="noopener"><strong>NASA Planetary Data System</strong><span>Planetary mission data archive ↗</span></a>
+      <a href="https://mars.nasa.gov/mars2020/" target="_blank" rel="noopener"><strong>Mars 2020 / Perseverance</strong><span>Jezero Crater mission context ↗</span></a>
+    </div>
+  </section>
+</main>
+<footer><span>MARS SAFE PATH</span><span>Individual student project · NASA Space Apps Challenge</span></footer>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="app.js"></script>
+</body>
+</html>
